@@ -1,10 +1,13 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import express, { Router, json } from 'express';
 import serverless from 'serverless-http';
 import cors from 'cors';
 
-dotenv.config({ path: '../.env' });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 import connectToDatabase from '../../../lib/db.js';
 import Branddeur from '../../../models/branddeur.js';

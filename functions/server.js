@@ -3,7 +3,6 @@ require('dotenv').config({path: '../.env'});
 const express = require('express');
 const serverless = require('serverless-http');
 const cors = require('cors');
-const mongoose = require('mongoose');
 
 const connectToDatabase = require('../lib/db');
 const Branddeur = require('../models/branddeur');

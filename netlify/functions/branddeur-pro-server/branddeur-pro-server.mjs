@@ -1,13 +1,14 @@
-require('dotenv').config({path: '../.env'});
+import dotenv from 'dotenv';
 
 import express, { Router, json } from 'express';
 import serverless from 'serverless-http';
 import cors from 'cors';
-import mongoose from 'mongoose';
 
-import connectToDatabase from '../lib/db';
-import Branddeur, { find, findById, findByIdAndUpdate, findByIdAndDelete } from '../models/branddeur';
-import verifyToken from '../middleware/authMiddleware';
+dotenv.config({ path: '../.env' });
+
+import connectToDatabase from '../../../lib/db.js';
+import Branddeur from '../../../models/branddeur.js';
+import verifyToken from '../../../middleware/authMiddleware.js';
 
 const app = express();
 const router = Router();
@@ -29,7 +30,7 @@ router.get('/', async (req, res) => {
     try {
         await connectToDatabase();
         console.log('Getting all branddeurs');
-        const branddeurs = await find();
+        const branddeurs = await Branddeur.find();
         res.json(branddeurs);
     } catch (err) {
         console.error('Error fetching brands:', err);
@@ -41,7 +42,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         await connectToDatabase();
-        const branddeur = await findById(req.params.id);
+        const branddeur = await Branddeur.findById(req.params.id);
         if (!branddeur) return res.status(404).json({message: 'Branddeur not found'});
         res.json(branddeur);
     } catch (err) {
@@ -77,7 +78,7 @@ router.put('/:id', verifyToken, async (req, res) => {
             return res.status(400).json({message: 'Branddeur ID is required'});
         }
 
-        const branddeur = await findByIdAndUpdate(req.params.id, req.body, {new: true});
+        const branddeur = await Branddeur.findByIdAndUpdate(req.params.id, req.body, {new: true});
         if (!branddeur) return res.status(404).json({message: 'Branddeur not found'});
         res.json(branddeur);
     } catch (err) {
@@ -90,7 +91,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
     try {
         await connectToDatabase();
-        const branddeur = await findByIdAndDelete(req.params.id);
+        const branddeur = await Branddeur.findByIdAndDelete(req.params.id);
         if (!branddeur) return res.status(404).json({message: 'Branddeur not found'});
         res.json({message: 'Branddeur deleted'});
     } catch (err) {
@@ -99,6 +100,6 @@ router.delete('/:id', verifyToken, async (req, res) => {
     }
 });
 
-app.use('/.netlify/functions/server', router);
+app.use('/.netlify/functions/branddeur-pro-server', router);
 
 export const handler = serverless(app);

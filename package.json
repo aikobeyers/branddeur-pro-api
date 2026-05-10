@@ -1,6 +1,7 @@
 {
   "name": "branddeur-pro-api",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "start": "netlify dev",
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -53,15 +53,37 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create a new branddeur
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', /*verifyToken,*/ async (req, res) => {
     try {
         await connectToDatabase();
 
-        if (!req.body.name) {
+        const {
+            name,
+            status,
+            doorType,
+            resistanceMinutes,
+            building,
+            floor,
+            location,
+            nextInspectionDate,
+            manufacturer,
+        } = req.body;
+
+        if (!name) {
             return res.status(400).json({message: 'Branddeur name is required'});
         }
 
-        const branddeur = new Branddeur({name: req.body.name});
+        const branddeur = new Branddeur({
+            name,
+            status,
+            doorType,
+            resistanceMinutes,
+            building,
+            floor,
+            location,
+            nextInspectionDate,
+            manufacturer,
+        });
         const newBranddeur = await branddeur.save();
         res.status(201).json(newBranddeur);
 

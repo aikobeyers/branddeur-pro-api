@@ -55,6 +55,15 @@ const normalizeInspectionResult = (inspectionResult) => {
     }
 
     if (typeof inspectionResult === 'string') {
+        // Check if it's a status code (A, B, C)
+        if (STATUS_OPTIONS[inspectionResult]) {
+            return {
+                statusCode: inspectionResult,
+                statusValue: STATUS_OPTIONS[inspectionResult],
+            };
+        }
+
+        // Check if it's a status value (Goedgekeurd, Herstel nodig, Afgekeurd)
         const statusCode = Object.entries(STATUS_OPTIONS)
             .find(([, statusValue]) => statusValue === inspectionResult)?.[0];
 

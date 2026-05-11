@@ -10,6 +10,7 @@ dotenv.config();
 import connectToDatabase from '../../../lib/db.js';
 import Branddeur from '../../../models/branddeur.js';
 import InspectieChecklistItem from '../../../models/inspectieChecklistItem.js';
+import BranddeurInspectie from '../../../models/branddeurInspectie.js';
 import verifyToken from '../../../middleware/authMiddleware.js';
 
 const app = express();
@@ -48,6 +49,90 @@ router.get('/inspectie-checklist-items', async (req, res) => {
         res.json(inspectieChecklistItems);
     } catch (err) {
         console.error('Error fetching inspectie checklist items:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// Get all branddeur inspecties
+router.get('/branddeur-inspecties', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const branddeurInspecties = await BranddeurInspectie.find()
+            .populate('branddeurId')
+            .populate('checkListItems.itemId');
+        res.json(branddeurInspecties);
+    } catch (err) {
+        console.error('Error fetching branddeur inspecties:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// Get a single branddeur inspectie by ID
+router.get('/branddeur-inspecties/:id', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const branddeurInspectie = await BranddeurInspectie.findById(req.params.id)
+            .populate('branddeurId')
+            .populate('checkListItems.itemId');
+        if (!branddeurInspectie) return res.status(404).json({ message: 'Branddeur inspectie not found' });
+        res.json(branddeurInspectie);
+    } catch (err) {
+        console.error('Error fetching branddeur inspectie by ID:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// Create a new branddeur inspectie
+router.post('/branddeur-inspecties', async (req, res) => {
+    try {
+        await connectToDatabase();
+
+        const { branddeurId, checkListItems } = req.body;
+        if (!branddeurId) {
+            return res.status(400).json({ message: 'branddeurId is required' });
+        }
+
+        const branddeurInspectie = new BranddeurInspectie({
+            branddeurId,
+            checkListItems,
+        });
+        const newBranddeurInspectie = await branddeurInspectie.save();
+        res.status(201).json(newBranddeurInspectie);
+    } catch (err) {
+        console.error('Error creating branddeur inspectie:', err);
+        res.status(400).json({ message: 'Bad Request. ' + err.message });
+    }
+});
+
+// Update a branddeur inspectie
+router.put('/branddeur-inspecties/:id', async (req, res) => {
+    try {
+        await connectToDatabase();
+        if (!req.params.id) {
+            return res.status(400).json({ message: 'Branddeur inspectie ID is required' });
+        }
+
+        const branddeurInspectie = await BranddeurInspectie.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true,
+        });
+        if (!branddeurInspectie) return res.status(404).json({ message: 'Branddeur inspectie not found' });
+        res.json(branddeurInspectie);
+    } catch (err) {
+        console.error('Error updating branddeur inspectie:', err);
+        res.status(400).json({ message: 'Bad Request. ' + err.message });
+    }
+});
+
+// Delete a branddeur inspectie
+router.delete('/branddeur-inspecties/:id', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const branddeurInspectie = await BranddeurInspectie.findByIdAndDelete(req.params.id);
+        if (!branddeurInspectie) return res.status(404).json({ message: 'Branddeur inspectie not found' });
+        res.json({ message: 'Branddeur inspectie deleted' });
+    } catch (err) {
+        console.error('Error deleting branddeur inspectie:', err);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });

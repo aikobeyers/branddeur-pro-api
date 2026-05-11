@@ -9,6 +9,7 @@ dotenv.config();
 
 import connectToDatabase from '../../../lib/db.js';
 import Branddeur from '../../../models/branddeur.js';
+import InspectieChecklistItem from '../../../models/inspectieChecklistItem.js';
 import verifyToken from '../../../middleware/authMiddleware.js';
 
 const app = express();
@@ -27,7 +28,7 @@ app.options('*', cors()); // Handle preflight requests
 // Routes
 
 // Get all branddeurs
-router.get('/', async (req, res) => {
+router.get('/branddeuren', async (req, res) => {
     try {
         await connectToDatabase();
         console.log('Getting all branddeurs');
@@ -39,8 +40,20 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Get all inspectie checklist items
+router.get('/inspectie-checklist-items', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const inspectieChecklistItems = await InspectieChecklistItem.find();
+        res.json(inspectieChecklistItems);
+    } catch (err) {
+        console.error('Error fetching inspectie checklist items:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
 // Get a single branddeur by ID
-router.get('/:id', async (req, res) => {
+router.get('/branddeuren/:id', async (req, res) => {
     try {
         await connectToDatabase();
         const branddeur = await Branddeur.findById(req.params.id);
@@ -53,7 +66,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create a new branddeur
-router.post('/', /*verifyToken,*/ async (req, res) => {
+router.post('/branddeuren', /*verifyToken,*/ async (req, res) => {
     try {
         await connectToDatabase();
 
@@ -94,7 +107,7 @@ router.post('/', /*verifyToken,*/ async (req, res) => {
 });
 
 // Update a branddeur
-router.put('/:id', /*verifyToken,*/ async (req, res) => {
+router.put('/branddeuren/:id', /*verifyToken,*/ async (req, res) => {
     try {
         await connectToDatabase();
         if (!req.params.id) {
@@ -114,7 +127,7 @@ router.put('/:id', /*verifyToken,*/ async (req, res) => {
 });
 
 // Delete a branddeur
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/branddeuren/:id', verifyToken, async (req, res) => {
     try {
         await connectToDatabase();
         const branddeur = await Branddeur.findByIdAndDelete(req.params.id);

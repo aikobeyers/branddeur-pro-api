@@ -27,8 +27,18 @@ const normalizeCheckListItems = (checkListItems) => {
 
     return Object.entries(checkListItems).map(([itemId, value]) => ({
         itemId,
-        value,
+        value: typeof value === 'string' ? value.toLowerCase() === 'true' : Boolean(value),
     }));
+};
+
+const getNormalizedCheckListItemsFromBody = (body) => {
+    const rawCheckListItems = body.checkListItems ?? body.checklistItems;
+
+    if (rawCheckListItems === undefined) {
+        return undefined;
+    }
+
+    return normalizeCheckListItems(rawCheckListItems);
 };
 
 // Middleware
@@ -104,7 +114,6 @@ router.post('/branddeur-inspecties', async (req, res) => {
 
         const {
             branddeurId,
-            checkListItems,
             foundProblems,
             generalCondition,
             inspectionDate,
@@ -113,13 +122,14 @@ router.post('/branddeur-inspecties', async (req, res) => {
             inspectorName,
             nextInspection,
         } = req.body;
+        const normalizedCheckListItems = getNormalizedCheckListItemsFromBody(req.body);
         if (!branddeurId) {
             return res.status(400).json({ message: 'branddeurId is required' });
         }
 
         const branddeurInspectie = new BranddeurInspectie({
             branddeurId,
-            checkListItems: normalizeCheckListItems(checkListItems),
+            checkListItems: normalizedCheckListItems ?? [],
             foundProblems,
             generalCondition,
             inspectionDate,
@@ -146,8 +156,14 @@ router.put('/branddeur-inspecties/:id', async (req, res) => {
 
         const updatePayload = {
             ...req.body,
-            checkListItems: normalizeCheckListItems(req.body.checkListItems),
         };
+
+        const normalizedCheckListItems = getNormalizedCheckListItemsFromBody(req.body);
+        if (normalizedCheckListItems !== undefined) {
+            updatePayload.checkListItems = normalizedCheckListItems;
+        }
+
+        delete updatePayload.checklistItems;
 
         const branddeurInspectie = await BranddeurInspectie.findByIdAndUpdate(req.params.id, updatePayload, {
             new: true,

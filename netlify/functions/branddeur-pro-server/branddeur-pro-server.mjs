@@ -16,6 +16,21 @@ import verifyToken from '../../../middleware/authMiddleware.js';
 const app = express();
 const router = Router();
 
+const normalizeCheckListItems = (checkListItems) => {
+    if (!checkListItems) {
+        return [];
+    }
+
+    if (Array.isArray(checkListItems)) {
+        return checkListItems;
+    }
+
+    return Object.entries(checkListItems).map(([itemId, value]) => ({
+        itemId,
+        value,
+    }));
+};
+
 // Middleware
 app.use(json());
 app.use(cors({
@@ -87,14 +102,31 @@ router.post('/branddeur-inspecties', async (req, res) => {
     try {
         await connectToDatabase();
 
-        const { branddeurId, checkListItems } = req.body;
+        const {
+            branddeurId,
+            checkListItems,
+            foundProblems,
+            generalCondition,
+            inspectionDate,
+            inspectionResult,
+            inspectionType,
+            inspectorName,
+            nextInspection,
+        } = req.body;
         if (!branddeurId) {
             return res.status(400).json({ message: 'branddeurId is required' });
         }
 
         const branddeurInspectie = new BranddeurInspectie({
             branddeurId,
-            checkListItems,
+            checkListItems: normalizeCheckListItems(checkListItems),
+            foundProblems,
+            generalCondition,
+            inspectionDate,
+            inspectionResult,
+            inspectionType,
+            inspectorName,
+            nextInspection,
         });
         const newBranddeurInspectie = await branddeurInspectie.save();
         res.status(201).json(newBranddeurInspectie);
@@ -112,7 +144,12 @@ router.put('/branddeur-inspecties/:id', async (req, res) => {
             return res.status(400).json({ message: 'Branddeur inspectie ID is required' });
         }
 
-        const branddeurInspectie = await BranddeurInspectie.findByIdAndUpdate(req.params.id, req.body, {
+        const updatePayload = {
+            ...req.body,
+            checkListItems: normalizeCheckListItems(req.body.checkListItems),
+        };
+
+        const branddeurInspectie = await BranddeurInspectie.findByIdAndUpdate(req.params.id, updatePayload, {
             new: true,
             runValidators: true,
         });

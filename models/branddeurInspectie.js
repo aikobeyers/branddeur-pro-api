@@ -22,6 +22,28 @@ const branddeurInspectieSchema = new mongoose.Schema({
         type: [checkListItemResultSchema],
         default: [],
     },
+    foundProblems: {
+        type: [String],
+        default: [],
+    },
+    generalCondition: {
+        type: String,
+    },
+    inspectionDate: {
+        type: Date,
+    },
+    inspectionResult: {
+        type: String,
+    },
+    inspectionType: {
+        type: String,
+    },
+    inspectorName: {
+        type: String,
+    },
+    nextInspection: {
+        type: Date,
+    },
 }, {
     timestamps: true,
 });

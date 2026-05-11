@@ -10,7 +10,7 @@ dotenv.config();
 import connectToDatabase from '../../../lib/db.js';
 import Branddeur from '../../../models/branddeur.js';
 import InspectieChecklistItem from '../../../models/inspectieChecklistItem.js';
-import BranddeurInspectie from '../../../models/branddeurInspectie.js';
+import BranddeurInspectie, { STATUS_OPTIONS } from '../../../models/branddeurInspectie.js';
 import verifyToken from '../../../middleware/authMiddleware.js';
 
 const app = express();
@@ -41,6 +41,47 @@ const getNormalizedCheckListItemsFromBody = (body) => {
     return normalizeCheckListItems(rawCheckListItems);
 };
 
+const normalizeInspectionResult = (inspectionResult) => {
+    if (inspectionResult === undefined) {
+        return undefined;
+    }
+
+    if (inspectionResult === null) {
+        return null;
+    }
+
+    if (typeof inspectionResult === 'object' && inspectionResult.statusCode && inspectionResult.statusValue) {
+        return inspectionResult;
+    }
+
+    if (typeof inspectionResult === 'string') {
+        const statusCode = Object.entries(STATUS_OPTIONS)
+            .find(([, statusValue]) => statusValue === inspectionResult)?.[0];
+
+        if (statusCode) {
+            return {
+                statusCode,
+                statusValue: inspectionResult,
+            };
+        }
+    }
+
+    return inspectionResult;
+};
+
+const syncMostRecentInspectionForBranddeur = async (branddeurId) => {
+    if (!branddeurId) {
+        return;
+    }
+
+    const latestInspection = await BranddeurInspectie.findOne({ branddeurId })
+        .sort({ inspectionDate: -1, createdAt: -1 });
+
+    await Branddeur.findByIdAndUpdate(branddeurId, {
+        mostRecentInspection: latestInspection?._id ?? null,
+    });
+};
+
 // Middleware
 app.use(json());
 app.use(cors({
@@ -58,7 +99,7 @@ router.get('/branddeuren', async (req, res) => {
     try {
         await connectToDatabase();
         console.log('Getting all branddeurs');
-        const branddeurs = await Branddeur.find();
+        const branddeurs = await Branddeur.find().populate('mostRecentInspection');
         res.json(branddeurs);
     } catch (err) {
         console.error('Error fetching brands:', err);
@@ -133,12 +174,13 @@ router.post('/branddeur-inspecties', async (req, res) => {
             foundProblems,
             generalCondition,
             inspectionDate,
-            inspectionResult,
+            inspectionResult: normalizeInspectionResult(inspectionResult),
             inspectionType,
             inspectorName,
             nextInspection,
         });
         const newBranddeurInspectie = await branddeurInspectie.save();
+        await syncMostRecentInspectionForBranddeur(branddeurId);
         res.status(201).json(newBranddeurInspectie);
     } catch (err) {
         console.error('Error creating branddeur inspectie:', err);
@@ -154,6 +196,11 @@ router.put('/branddeur-inspecties/:id', async (req, res) => {
             return res.status(400).json({ message: 'Branddeur inspectie ID is required' });
         }
 
+        const existingBranddeurInspectie = await BranddeurInspectie.findById(req.params.id);
+        if (!existingBranddeurInspectie) {
+            return res.status(404).json({ message: 'Branddeur inspectie not found' });
+        }
+
         const updatePayload = {
             ...req.body,
         };
@@ -163,13 +210,22 @@ router.put('/branddeur-inspecties/:id', async (req, res) => {
             updatePayload.checkListItems = normalizedCheckListItems;
         }
 
+        if (req.body.inspectionResult !== undefined) {
+            updatePayload.inspectionResult = normalizeInspectionResult(req.body.inspectionResult);
+        }
+
         delete updatePayload.checklistItems;
 
         const branddeurInspectie = await BranddeurInspectie.findByIdAndUpdate(req.params.id, updatePayload, {
             new: true,
             runValidators: true,
         });
-        if (!branddeurInspectie) return res.status(404).json({ message: 'Branddeur inspectie not found' });
+
+        await syncMostRecentInspectionForBranddeur(existingBranddeurInspectie.branddeurId);
+        if (String(existingBranddeurInspectie.branddeurId) !== String(branddeurInspectie.branddeurId)) {
+            await syncMostRecentInspectionForBranddeur(branddeurInspectie.branddeurId);
+        }
+
         res.json(branddeurInspectie);
     } catch (err) {
         console.error('Error updating branddeur inspectie:', err);
@@ -183,6 +239,8 @@ router.delete('/branddeur-inspecties/:id', async (req, res) => {
         await connectToDatabase();
         const branddeurInspectie = await BranddeurInspectie.findByIdAndDelete(req.params.id);
         if (!branddeurInspectie) return res.status(404).json({ message: 'Branddeur inspectie not found' });
+
+        await syncMostRecentInspectionForBranddeur(branddeurInspectie.branddeurId);
         res.json({ message: 'Branddeur inspectie deleted' });
     } catch (err) {
         console.error('Error deleting branddeur inspectie:', err);
@@ -194,7 +252,7 @@ router.delete('/branddeur-inspecties/:id', async (req, res) => {
 router.get('/branddeuren/:id', async (req, res) => {
     try {
         await connectToDatabase();
-        const branddeur = await Branddeur.findById(req.params.id);
+        const branddeur = await Branddeur.findById(req.params.id).populate('mostRecentInspection');
         if (!branddeur) return res.status(404).json({message: 'Branddeur not found'});
         res.json(branddeur);
     } catch (err) {
@@ -210,7 +268,6 @@ router.post('/branddeuren', /*verifyToken,*/ async (req, res) => {
 
         const {
             name,
-            status,
             doorType,
             resistanceMinutes,
             building,
@@ -226,7 +283,6 @@ router.post('/branddeuren', /*verifyToken,*/ async (req, res) => {
 
         const branddeur = new Branddeur({
             name,
-            status,
             doorType,
             resistanceMinutes,
             building,

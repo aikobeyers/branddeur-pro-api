@@ -1,5 +1,24 @@
 import mongoose from 'mongoose';
 
+export const STATUS_OPTIONS = {
+    A: 'Goedgekeurd',
+    B: 'Herstel nodig',
+    C: 'Afgekeurd',
+};
+
+const statusSchema = new mongoose.Schema({
+    statusCode: {
+        type: String,
+        enum: Object.keys(STATUS_OPTIONS),
+        required: true,
+    },
+    statusValue: {
+        type: String,
+        enum: Object.values(STATUS_OPTIONS),
+        required: true,
+    },
+}, { _id: false });
+
 const checkListItemResultSchema = new mongoose.Schema({
     itemId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -33,7 +52,16 @@ const branddeurInspectieSchema = new mongoose.Schema({
         type: Date,
     },
     inspectionResult: {
-        type: String,
+        type: statusSchema,
+        validate: {
+            validator: (value) => {
+                if (!value) {
+                    return true;
+                }
+                return STATUS_OPTIONS[value.statusCode] === value.statusValue;
+            },
+            message: 'Invalid inspectionResult combination. Use A/Goedgekeurd, B/Herstel nodig, or C/Afgekeurd.',
+        },
     },
     inspectionType: {
         type: String,

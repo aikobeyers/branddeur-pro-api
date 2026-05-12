@@ -317,13 +317,25 @@ router.put('/branddeuren/:id', /*verifyToken,*/ async (req, res) => {
             return res.status(400).json({message: 'Branddeur ID is required'});
         }
 
-        const { initialInspectionDate, ...updatePayload } = req.body;
+        const existingBranddeur = await Branddeur.findById(req.params.id);
+        if (!existingBranddeur) {
+            return res.status(404).json({message: 'Branddeur not found'});
+        }
+
+        const updatePayload = {
+            ...req.body,
+        };
+
+        // Only allow editing initialInspectionDate when no inspection has been linked yet.
+        if (existingBranddeur.mostRecentInspection) {
+            delete updatePayload.initialInspectionDate;
+        }
 
         const branddeur = await Branddeur.findByIdAndUpdate(req.params.id, updatePayload, {
             new: true,
             runValidators: true,
         });
-        if (!branddeur) return res.status(404).json({message: 'Branddeur not found'});
+
         res.json(branddeur);
     } catch (err) {
         console.error('Error updating brand:', err);

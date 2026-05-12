@@ -11,7 +11,6 @@ const branddeurSchema = new mongoose.Schema({
     building: { type: String },
     floor: { type: String },
     location: { type: String },
-    nextInspectionDate: { type: Date },
     manufacturer: { type: String },
 });
 

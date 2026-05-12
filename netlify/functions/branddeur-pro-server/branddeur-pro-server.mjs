@@ -282,7 +282,6 @@ router.post('/branddeuren', /*verifyToken,*/ async (req, res) => {
             building,
             floor,
             location,
-            nextInspectionDate,
             manufacturer,
         } = req.body;
 
@@ -297,7 +296,6 @@ router.post('/branddeuren', /*verifyToken,*/ async (req, res) => {
             building,
             floor,
             location,
-            nextInspectionDate,
             manufacturer,
         });
         const newBranddeur = await branddeur.save();

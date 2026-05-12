@@ -282,6 +282,7 @@ router.post('/branddeuren', /*verifyToken,*/ async (req, res) => {
             building,
             floor,
             location,
+            initialInspectionDate,
             manufacturer,
         } = req.body;
 
@@ -296,6 +297,7 @@ router.post('/branddeuren', /*verifyToken,*/ async (req, res) => {
             building,
             floor,
             location,
+            initialInspectionDate,
             manufacturer,
         });
         const newBranddeur = await branddeur.save();
@@ -315,7 +317,9 @@ router.put('/branddeuren/:id', /*verifyToken,*/ async (req, res) => {
             return res.status(400).json({message: 'Branddeur ID is required'});
         }
 
-        const branddeur = await Branddeur.findByIdAndUpdate(req.params.id, req.body, {
+        const { initialInspectionDate, ...updatePayload } = req.body;
+
+        const branddeur = await Branddeur.findByIdAndUpdate(req.params.id, updatePayload, {
             new: true,
             runValidators: true,
         });

@@ -171,6 +171,7 @@ router.post('/branddeur-inspecties', async (req, res) => {
             inspectionResult,
             inspectionType,
             inspectorName,
+            supervisor,
             nextInspection,
         } = req.body;
         const normalizedCheckListItems = getNormalizedCheckListItemsFromBody(req.body);
@@ -187,6 +188,7 @@ router.post('/branddeur-inspecties', async (req, res) => {
             inspectionResult: normalizeInspectionResult(inspectionResult),
             inspectionType,
             inspectorName,
+            supervisor,
             nextInspection,
         });
         const newBranddeurInspectie = await branddeurInspectie.save();

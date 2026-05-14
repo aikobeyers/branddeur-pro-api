@@ -69,6 +69,9 @@ const branddeurInspectieSchema = new mongoose.Schema({
     inspectorName: {
         type: String,
     },
+    supervisor: {
+        type: String,
+    },
     nextInspection: {
         type: Date,
     },

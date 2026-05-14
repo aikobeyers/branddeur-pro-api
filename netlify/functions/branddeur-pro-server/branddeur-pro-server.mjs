@@ -166,6 +166,7 @@ router.post('/branddeur-inspecties', async (req, res) => {
         const {
             branddeurId,
             foundProblems,
+            suggestedActions,
             generalCondition,
             inspectionDate,
             inspectionResult,
@@ -183,6 +184,7 @@ router.post('/branddeur-inspecties', async (req, res) => {
             branddeurId,
             checkListItems: normalizedCheckListItems ?? [],
             foundProblems,
+            suggestedActions,
             generalCondition,
             inspectionDate,
             inspectionResult: normalizeInspectionResult(inspectionResult),

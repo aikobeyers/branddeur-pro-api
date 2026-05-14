@@ -45,6 +45,10 @@ const branddeurInspectieSchema = new mongoose.Schema({
         type: [String],
         default: [],
     },
+    suggestedActions: {
+        type: [String],
+        default: [],
+    },
     generalCondition: {
         type: String,
     },

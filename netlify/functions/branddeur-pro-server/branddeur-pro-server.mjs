@@ -322,13 +322,20 @@ router.put('/branddeuren/:id', /*verifyToken,*/ async (req, res) => {
             return res.status(404).json({message: 'Branddeur not found'});
         }
 
-        const updatePayload = {
-            ...req.body,
-        };
-
+        // Define allowed fields for update
+        const allowedFields = ['name', 'doorType', 'resistanceMinutes', 'building', 'floor', 'location', 'manufacturer'];
+        
         // Only allow editing initialInspectionDate when no inspection has been linked yet.
-        if (existingBranddeur.mostRecentInspection) {
-            delete updatePayload.initialInspectionDate;
+        if (!existingBranddeur.mostRecentInspection) {
+            allowedFields.push('initialInspectionDate');
+        }
+
+        // Build update payload with only allowed fields
+        const updatePayload = {};
+        for (const field of allowedFields) {
+            if (field in req.body) {
+                updatePayload[field] = req.body[field];
+            }
         }
 
         const branddeur = await Branddeur.findByIdAndUpdate(req.params.id, updatePayload, {

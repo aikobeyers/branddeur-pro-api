@@ -12,6 +12,7 @@ import Branddeur from '../../../models/branddeur.js';
 import InspectieChecklistItem from '../../../models/inspectieChecklistItem.js';
 import BranddeurInspectie, { STATUS_OPTIONS } from '../../../models/branddeurInspectie.js';
 import verifyToken from '../../../middleware/authMiddleware.js';
+import InspectieChecklistCategory from '../../../models/inspectieChecklistCategory.js';
 
 const app = express();
 const router = Router();
@@ -355,6 +356,79 @@ router.delete('/branddeuren/:id', verifyToken, async (req, res) => {
     } catch (err) {
         console.error('Error deleting brand:', err);
         res.status(500).json({message: 'Internal Server Error'});
+    }
+});
+
+// Get all inspectie checklist categories
+router.get('/inspectie-checklist-categories', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const categories = await InspectieChecklistCategory.find();
+        res.json(categories);
+    } catch (err) {
+        console.error('Error fetching inspectie checklist categories:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// Get a single inspectie checklist category by ID
+router.get('/inspectie-checklist-categories/:id', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const category = await InspectieChecklistCategory.findById(req.params.id);
+        if (!category) return res.status(404).json({ message: 'Category not found' });
+        res.json(category);
+    } catch (err) {
+        console.error('Error fetching inspectie checklist category by ID:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// Create a new inspectie checklist category
+router.post('/inspectie-checklist-categories', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const { code, value } = req.body;
+        if (!code || !value) {
+            return res.status(400).json({ message: 'Code and value are required' });
+        }
+        const newCategory = new InspectieChecklistCategory({ code, value });
+        const savedCategory = await newCategory.save();
+        res.status(201).json(savedCategory);
+    } catch (err) {
+        console.error('Error creating inspectie checklist category:', err);
+        res.status(400).json({ message: 'Bad Request. ' + err.message });
+    }
+});
+
+// Update an inspectie checklist category
+router.put('/inspectie-checklist-categories/:id', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const { code, value } = req.body;
+        const updatedCategory = await InspectieChecklistCategory.findByIdAndUpdate(
+            req.params.id,
+            { code, value },
+            { new: true, runValidators: true }
+        );
+        if (!updatedCategory) return res.status(404).json({ message: 'Category not found' });
+        res.json(updatedCategory);
+    } catch (err) {
+        console.error('Error updating inspectie checklist category:', err);
+        res.status(400).json({ message: 'Bad Request. ' + err.message });
+    }
+});
+
+// Delete an inspectie checklist category
+router.delete('/inspectie-checklist-categories/:id', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const deletedCategory = await InspectieChecklistCategory.findByIdAndDelete(req.params.id);
+        if (!deletedCategory) return res.status(404).json({ message: 'Category not found' });
+        res.json({ message: 'Category deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting inspectie checklist category:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 });
 

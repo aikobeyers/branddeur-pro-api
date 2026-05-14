@@ -323,12 +323,7 @@ router.put('/branddeuren/:id', /*verifyToken,*/ async (req, res) => {
         }
 
         // Define allowed fields for update
-        const allowedFields = ['name', 'doorType', 'resistanceMinutes', 'building', 'floor', 'location', 'manufacturer'];
-        
-        // Only allow editing initialInspectionDate when no inspection has been linked yet.
-        if (!existingBranddeur.mostRecentInspection) {
-            allowedFields.push('initialInspectionDate');
-        }
+        const allowedFields = ['name', 'doorType', 'resistanceMinutes', 'building', 'floor', 'location', 'manufacturer', 'initialInspectionDate'];
 
         // Build update payload with only allowed fields
         const updatePayload = {};
@@ -338,7 +333,7 @@ router.put('/branddeuren/:id', /*verifyToken,*/ async (req, res) => {
             }
         }
 
-        const branddeur = await Branddeur.findByIdAndUpdate(req.params.id, updatePayload, {
+        const branddeur = await Branddeur.findByIdAndUpdate(req.params.id, { $set: updatePayload }, {
             new: true,
             runValidators: true,
         });

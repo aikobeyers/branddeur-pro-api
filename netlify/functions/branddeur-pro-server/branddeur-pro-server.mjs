@@ -121,7 +121,7 @@ router.get('/branddeuren', async (req, res) => {
 router.get('/inspectie-checklist-items', async (req, res) => {
     try {
         await connectToDatabase();
-        const inspectieChecklistItems = await InspectieChecklistItem.find();
+        const inspectieChecklistItems = await InspectieChecklistItem.find().populate('category');
         res.json(inspectieChecklistItems);
     } catch (err) {
         console.error('Error fetching inspectie checklist items:', err);
@@ -429,6 +429,25 @@ router.delete('/inspectie-checklist-categories/:id', async (req, res) => {
     } catch (err) {
         console.error('Error deleting inspectie checklist category:', err);
         res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// Bulk create inspectie checklist items
+router.post('/inspectie-checklist-items', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const items = Array.isArray(req.body) ? req.body : [req.body];
+        // Validate all items have required fields
+        for (const item of items) {
+            if (!item.displayValue || !item.category) {
+                return res.status(400).json({ message: 'Each item must have displayValue and category' });
+            }
+        }
+        const createdItems = await InspectieChecklistItem.insertMany(items);
+        res.status(201).json(createdItems);
+    } catch (err) {
+        console.error('Error creating inspectie checklist items:', err);
+        res.status(400).json({ message: 'Bad Request. ' + err.message });
     }
 });
 

@@ -40,11 +40,7 @@ const branddeurInspectieSchema = new mongoose.Schema({
         type: [checkListItemResultSchema],
         default: [],
     },
-    foundProblems: {
-        type: [String],
-        default: [],
-    },
-    suggestedActions: {
+    repairsNeededFor: {
         type: [String],
         default: [],
     },

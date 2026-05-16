@@ -69,7 +69,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         await connectToDatabase();
-        const { branddeurId, foundProblems, suggestedActions, generalCondition, inspectionDate, inspectionResult, inspectionType, inspectorName, supervisor, nextInspection } = req.body;
+        const { branddeurId, repairsNeededFor, generalCondition, inspectionDate, inspectionResult, inspectionType, inspectorName, supervisor, nextInspection } = req.body;
         const normalizedCheckListItems = getNormalizedCheckListItemsFromBody(req.body);
         if (!branddeurId) {
             return res.status(400).json({ message: 'branddeurId is required' });
@@ -77,8 +77,7 @@ router.post('/', async (req, res) => {
         const branddeurInspectie = new BranddeurInspectie({
             branddeurId,
             checkListItems: normalizedCheckListItems ?? [],
-            foundProblems,
-            suggestedActions,
+            repairsNeededFor,
             generalCondition,
             inspectionDate,
             inspectionResult: normalizeInspectionResult(inspectionResult),

@@ -2,8 +2,7 @@ import mongoose from 'mongoose';
 
 export const STATUS_OPTIONS = {
     A: 'Goedgekeurd',
-    B: 'Herstel nodig',
-    C: 'Afgekeurd',
+    B: 'Afgekeurd',
 };
 
 const statusSchema = new mongoose.Schema({
@@ -64,7 +63,7 @@ const branddeurInspectieSchema = new mongoose.Schema({
                 }
                 return STATUS_OPTIONS[value.statusCode] === value.statusValue;
             },
-            message: 'Invalid inspectionResult combination. Use A/Goedgekeurd, B/Herstel nodig, or C/Afgekeurd.',
+            message: 'Invalid inspectionResult combination. Use A/Goedgekeurd or B/Afgekeurd.',
         },
     },
     inspectionType: {
